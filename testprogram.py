@@ -26,7 +26,7 @@ for i, test_case in enumerate(test_cases, 1):
     input_data = "\n".join(test_case["input"])
     required_output = "\n".join(test_case["output"])
     if args.python:
-        process = subprocess.run(["python3", args.program_file],
+        process = subprocess.run(["python", args.program_file],
                                  input=input_data.encode(),
                                  capture_output=True)
 
