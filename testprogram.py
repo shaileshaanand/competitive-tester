@@ -4,6 +4,7 @@ import json
 import subprocess
 import os
 import sys
+import time
 
 
 parser = argparse.ArgumentParser(
@@ -25,9 +26,10 @@ failed_cases = 0
 for i, test_case in enumerate(test_cases, 1):
     input_data = "\n".join(test_case["input"])
     required_output = "\n".join(test_case["output"])
+    start_time = time.time()
     if sys.platform == 'linux':
         if args.exe:
-            process = subprocess.run([f".{os.path.sep}args.program_file"],
+            process = subprocess.run([f".{os.path.sep}{args.program_file}"],
                                      input=input_data.encode(),
                                      capture_output=True)
         elif args.python:
@@ -45,9 +47,10 @@ for i, test_case in enumerate(test_cases, 1):
                                      input=input_data.encode(),
                                      capture_output=True,
                                      shell=True)
+    time_taken = time.time()-start_time
     actual_output = process.stdout.decode().strip().replace('\r', '')
     if process.returncode == 0 and required_output == actual_output:
-        print(f"Test Case {i} Passed  ✅")
+        print(f"Test Case {i} Passed and took {time_taken:.3f} seconds  ✅")
     else:
         failed_cases += 1
         print(f"Test Case {i} Failed ❎")
