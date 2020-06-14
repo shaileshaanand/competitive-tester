@@ -34,7 +34,7 @@ for i, test_case in enumerate(test_cases, 1):
         process = subprocess.run([f".{os.path.sep}args.program_file"],
                                  input=input_data.encode(),
                                  capture_output=True)
-    actual_output = process.stdout.decode().strip()
+    actual_output = process.stdout.decode().strip().replace('\r','')
     if process.returncode == 0 and required_output == actual_output:
         print(f"Test Case {i} Passed  ✅")
     else:
