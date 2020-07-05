@@ -17,34 +17,61 @@ language.add_argument('--python', action='store_true',
                       help="call program by 'python3 filename.py', (default)")
 language.add_argument('--exe', action='store_true',
                       help="call program by './filename'")
+language.add_argument('--java', action='store_true',
+                      help="call program by 'java classname'")
+language.add_argument('--pypy', action='store_true',
+                      help="call program by 'pypy3 filename'")
 parser.add_argument('-t', '--test-file',
                     help="path to the tests json file", required=True, type=open)
 args = parser.parse_args()
+if args.java:
+    subprocess.run(["javac", f"{args.program_file}.java"])
 test_cases = json.loads(args.test_file.read())
 total_cases = len(test_cases)
 failed_cases = 0
 for i, test_case in enumerate(test_cases, 1):
-    input_data = "\n".join(test_case["input"])
+    input_data = "\n".join(test_case["input"]).encode()
     required_output = "\n".join(test_case["output"])
     start_time = time.time()
-    if sys.platform == 'linux':
-        if args.exe:
+    process = None
+    if args.exe:
+        if sys.platform == 'linux':
             process = subprocess.run([f".{os.path.sep}{args.program_file}"],
-                                     input=input_data.encode(),
+                                     input=input_data,
                                      capture_output=True)
-        elif args.python:
-            process = subprocess.run(["python3", args.program_file],
-                                     input=input_data.encode(),
-                                     capture_output=True)
-    elif sys.platform == 'win32':
-        if args.exe:
+        elif sys.platform == 'win32':
             process = subprocess.run([f"{args.program_file}"],
-                                     input=input_data.encode(),
+                                     input=input_data,
                                      capture_output=True,
                                      shell=True)
-        elif args.python:
+    elif args.python:
+        if sys.platform == 'linux':
+            process = subprocess.run(["python3", args.program_file],
+                                     input=input_data,
+                                     capture_output=True)
+        elif sys.platform == 'win32':
             process = subprocess.run(["python", args.program_file],
-                                     input=input_data.encode(),
+                                     input=input_data,
+                                     capture_output=True,
+                                     shell=True)
+    elif args.pypy:
+        if sys.platform == 'linux':
+            process = subprocess.run(["pypy3", args.program_file],
+                                     input=input_data,
+                                     capture_output=True)
+        elif sys.platform == 'win32':
+            process = subprocess.run(["pypy", args.program_file],
+                                     input=input_data,
+                                     capture_output=True,
+                                     shell=True)
+    elif args.java:
+        if sys.platform == 'linux':
+            process = subprocess.run(["java", f"{args.program_file}"],
+                                     input=input_data,
+                                     capture_output=True,)
+        elif sys.platform == 'win32':
+            process = subprocess.run(["java", f"{args.program_file}"],
+                                     input=input_data,
                                      capture_output=True,
                                      shell=True)
     time_taken = time.time()-start_time
@@ -56,11 +83,12 @@ for i, test_case in enumerate(test_cases, 1):
         print(f"Test Case {i} Failed ❎")
         if process.returncode == 0:
             print(f"Required Output:\n{required_output}\n---------------")
-            print(f"Actual Output:\n{actual_output}\n---------------\n")
+            print(
+                f"Actual Output:\n{actual_output}\n---------------\n(took {time_taken:.3f} seconds)\n")
         else:
             failed_cases += 1
             print("---------------")
-            print("Runtime Error:")
+            print(f"Runtime Error: (took {time_taken:.3f} seconds)")
             print(process.stderr.decode().strip())
             print("---------------\n")
 if failed_cases == 0:
